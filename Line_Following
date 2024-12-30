@@ -1,0 +1,74 @@
+//define IR
+const int ir_right = 12, ir_left = 13;
+
+//define for motors
+const int enA = 3, enB = 11;
+const int in4 = A3, in3 = A2, in2 = A1, in1 = A0;
+
+void setup() {
+  pinMode(enA, OUTPUT);  //output to left wheel
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  pinMode(enB, OUTPUT);  //output to right wheel
+  pinMode(in3, OUTPUT);
+  pinMode(in4, OUTPUT);
+
+  pinMode(ir_left, INPUT);  //define IR
+  pinMode(ir_right, INPUT);
+}
+
+void forward() //function to move car forwards slowly
+{
+  analogWrite(enA, 130);
+  analogWrite(enB, 130);
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+}
+
+void backwards() //function to move car backwards
+{
+  analogWrite(enA, 255);
+  analogWrite(enB, 255);
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH);
+}
+
+void turnleft() //function to turn car left
+{
+  analogWrite(enB, 255);
+  analogWrite(enA, 255);
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+}
+
+void turnright() //function to turn car right
+{
+  analogWrite(enA, 255);
+  analogWrite(enB, 255);
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH);
+}
+
+void stop() //function to stop car
+{
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW);
+}
+
+void loop() {
+  int IRleft = digitalRead(ir_left);
+  int IRright = digitalRead(ir_right);
+  if ((IRright == HIGH) && (IRleft == LOW)) turnright();
+  else if ((IRright == LOW) && (IRleft == HIGH)) turnleft();
+  else forwardS();
+}
