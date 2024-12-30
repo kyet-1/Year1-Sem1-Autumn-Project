@@ -1,0 +1,68 @@
+//define for ultrasonic sensor
+const int trigPin = 13;
+const int echoPin = 12;
+
+//define for motors
+const int enA = 3, enB = 11;
+const int in4 = A3, in3 = A2, in2 = A1, in1 = A0;
+
+long duration;
+int distance;
+
+void setup() {
+  //define for ultrasonic sensor
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  pinMode(enA, OUTPUT);  //output to left wheel
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  pinMode(enB, OUTPUT);  //output to right wheel
+  pinMode(in3, OUTPUT);
+  pinMode(in4, OUTPUT);
+}
+
+void forward() //function to move car forward
+{
+  analogWrite(enA, 130);
+  analogWrite(enB, 130);
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+}
+
+void turnleft() //function to turn car left
+{
+  analogWrite(enB, 130);
+  analogWrite(enA, 130);
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+}
+
+void stop() //function to stop car
+{
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW);
+  delay(30);
+}
+
+void loop() 
+{
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+
+  distance = duration * 0.034 / 2;
+
+  if (distance <= 25 && distance >0) turnleft();
+  else if (distance> 1100) stop();
+  else forward();
+}
