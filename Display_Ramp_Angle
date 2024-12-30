@@ -1,0 +1,177 @@
+#include <LiquidCrystal.h>
+#include <MPU6050_tockn.h> 
+#include <Wire.h>
+
+MPU6050 mpu6050(Wire);
+
+//define for lcd
+const int rs = 8, en = 9, D4 = 4, D5 = 5, D6 = 6, D7 = 7;
+LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
+
+//define for motors
+const int enA = 3, enB = 11;
+const int in4 = A3, in3 = A2, in2 = A1, in1 = A0;
+
+//define IR
+const int ir_right = 12, ir_left = 13;
+
+//define angle to display
+float Angle;
+float getAngleX;
+
+//define various counters
+int spun;
+int countUp=0, countDown=0, countFlat=0;
+int angleCounter=0, t=0;
+int clear=0;
+int resetCounter=0;
+
+void setup() {
+  pinMode(enA, OUTPUT);  //output to left wheel
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  pinMode(enB, OUTPUT);  //output to right wheel
+  pinMode(in3, OUTPUT);
+  pinMode(in4, OUTPUT);
+
+  lcd.begin(16, 2);  //define lcd size
+
+  pinMode(ir_left, INPUT);  //define IR
+  pinMode(ir_right, INPUT);
+
+  attachPCINT(17, count1, RISING);  //define encoders
+  attachPCINT(18, count2, RISING);
+
+  Wire.begin();  //define for MPU6050
+  mpu6050.begin();
+  mpu6050.calcGyroOffsets(true);
+
+}
+
+void forwardF() //function to move car forwards fast
+{
+  analogWrite(enA, 255);
+  analogWrite(enB, 255);
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+}
+
+void forwardS() //function to move car forwards slowly
+{
+  analogWrite(enA, 130);
+  analogWrite(enB, 130);
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+}
+
+void backwards() //function to move car backwards
+{
+  analogWrite(enA, 255);
+  analogWrite(enB, 255);
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH);
+}
+
+void turnleft() //function to turn car left
+{
+  analogWrite(enB, 255);
+  analogWrite(enA, 255);
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+}
+
+void turnright() //function to turn car right
+{
+  analogWrite(enA, 255);
+  analogWrite(enB, 255);
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH);
+}
+
+void stop() //function to stop car
+{
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW);
+}
+
+void followLineRamp() //function for car to follow the line while on the ramp
+{
+  int IRleft = digitalRead(ir_left);
+  int IRright = digitalRead(ir_right);
+  if ((IRright == HIGH) && (IRleft == LOW)) turnright();
+  else if ((IRright == LOW) && (IRleft == HIGH)) turnleft();
+  else forwardS();
+}
+
+void loop() {
+  mpu6050.update();
+  int IRleft = digitalRead(ir_left);
+  int IRright = digitalRead(ir_right);
+
+  getAngleX = mpu6050.getAngleX();
+
+  if (angleCounter==0)
+  {
+    if (getAngleX>24.4 && getAngleX<25.7) Angle=(getAngleX);
+    if (Angle>0) angleCounter=1;
+  }
+
+  if (countFlat < 3) //if car has not cleared the ramp
+  {
+    if (getAngleX > 20) //up the ramp
+    {
+      if (countUp==0) countUp+=1;
+      forwardF();
+    }
+
+    if (getAngleX < -20)  //down the ramp
+    {
+      if (countDown==0) countDown+=1;
+      followLineRamp();
+    }
+
+    if (getAngleX > -20 && getAngleX < 20) //flat around/on the ramp
+    {
+      if (countFlat==0) countFlat+=1;
+      if (countFlat==1 && countUp==1) countFlat+=1;
+      if (countFlat==2 && countDown==1) countFlat+=1;
+      
+      followLineRamp();
+
+      if (countFlat==2)
+      {
+        lcd.setCursor(0, 1);
+        lcd.print("Angle: ");
+        lcd.setCursor(7, 1);
+        lcd.print(Angle);
+      }
+    }
+
+    if (countFlat==2 && spin==0) //if car is on top of ramp (can change)
+    { 
+      forwardS();
+      delay(500);
+      stop();
+      delay(4000);
+
+      // Turn exactly one circle (close to 360 degrees)
+      while (abs(mpu6050.getAngleZ()) < 675) {
+        turnright();
+        mpu6050.update();
+      }
+      spun+=1;
+    }
+  }
+}
