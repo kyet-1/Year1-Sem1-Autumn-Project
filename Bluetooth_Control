@@ -1,0 +1,81 @@
+//define for motors
+int enA = 3, enB = 11;
+int in1 = A0, in2 = A1, in3 = A2, in4 = A3;
+
+//define for bluetooth
+int data;
+
+void setup() {
+  pinMode(enA, OUTPUT);  // Output to left wheel
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  pinMode(enB, OUTPUT);  // Output to right wheel
+  pinMode(in3, OUTPUT);
+  pinMode(in4, OUTPUT);
+
+  // Initialize serial communication
+  Serial.begin(9600);
+}
+
+void loop() {
+  while (Serial.available() > 0) {
+    data = Serial.read();
+    Serial.println(data);
+
+    // Motor control commands
+    if (data == 'F') {
+      forward();
+    } else if (data == 'B') {
+      backwards();
+    } else if (data == 'L') {
+      turnleft();
+    } else if (data == 'R') {
+      turnright();
+    } else if (data == 'S') {
+      stop();
+    }
+  }
+
+  // Motor control functions
+  void forward() {
+    analogWrite(enA, 255);
+    analogWrite(enB, 255);
+    digitalWrite(in1, HIGH);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, HIGH);
+    digitalWrite(in4, LOW);
+  }
+
+  void backwards() {
+    analogWrite(enA, 255);
+    analogWrite(enB, 255);
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, HIGH);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, HIGH);
+  }
+
+  void turnleft() {
+    analogWrite(enB, 255);
+    analogWrite(enA, 255);
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, HIGH);
+    digitalWrite(in3, HIGH);
+    digitalWrite(in4, LOW);
+  }
+
+  void turnright() {
+    analogWrite(enA, 255);
+    analogWrite(enB, 255);
+    digitalWrite(in1, HIGH);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, HIGH);
+  }
+
+  void stop() {
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, LOW);
+  }
