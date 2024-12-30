@@ -1,0 +1,61 @@
+#include <LiquidCrystal.h>
+#include <PinChangeInterrupt.h>
+
+//define for lcd
+const int rs = 8, en = 9, D4 = 4, D5 = 5, D6 = 6, D7 = 7;
+LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
+
+//define for motors
+const int enA = 3, enB = 11;
+const int in4 = A3, in3 = A2, in2 = A1, in1 = A0;
+
+//define encoder
+int pulse1 = 0, pulse2 = 0;
+int pc1 = 1, pc2 = 2;
+long circ = 6.5* 3.142, distance1, distance2, totalDistance;
+
+//define IR
+const int ir_right = 13, ir_left=12;
+
+void count1() {
+  pulse1 += 2;
+}
+
+void count2() {
+  pulse2 += 2;
+}
+
+void setup() {
+  pinMode(enA, OUTPUT);  //output to left wheel
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  pinMode(enB, OUTPUT);  //output to right wheel
+  pinMode(in3, OUTPUT);
+  pinMode(in4, OUTPUT);
+
+  lcd.begin(16, 2);  //define lcd size
+
+  attachPCINT(17, count1, RISING);  //define encoders
+  attachPCINT(18, count2, RISING);
+}
+
+void loop() {
+  lcd.setCursor(0,0);
+  lcd.print("D:");
+  lcd.setCursor(3,0);
+  distanceDisplay();
+  lcd.print(totalDistance);
+
+  if(totalDistance==340) {
+    stop();
+    delay(3000);
+  }
+
+  int IRleft = digitalRead(ir_left);
+  int IRright = digitalRead(ir_right);
+
+  if ((IRright == HIGH)  && (IRleft == LOW)) turnright();
+  else if ((IRright == LOW) && (IRleft == HIGH)) turnleft();
+  else if ((IRleft == LOW) &&(IRright == LOW)) stop();
+  else forward();
+}
